@@ -61,9 +61,8 @@ python3 ./crapsecrets/examples/cli.py -mrd 5 -avsk -fvsp -mkf ./local/aspnet_mac
 - It uses the encrypted resource values from `/WebResource.axd?d=` or `/ScriptResource.axd?d=` under a new module called "aspnet_resource.py". It also supports IsolateApps feature there too. This is useful when __VIEWSTATE and __EVENTVALIDATION are missing.
 
 ## TODO:
-- Make adding public IP address to the potential viewstate keys
+- add client IP addresses to the potential viewstate keys
 - add a dictionary for common pages and directories when calculating viewstate
-- Implement support for IsolateApps (rely on the hashcode). This is when we have ",IsolateApps" after the validation or decryption key.
 - Implement support for IsolateByAppId (probably impossible as it requires a secret from registry which we shouldn't have!)
 - Add support for retry when there is an error.
 - Test errors due to replacing requests with httpx.
