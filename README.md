@@ -1,5 +1,9 @@
-# Forked from badsecrets 0.7.0 - synced occasionally until March 2025!
-# This is Crap(Bad)Secrets
+### Forked originally from badsecrets 0.7.0
+### Synced occasionally until March 2025!
+### > Outdated with some modules and test cases are not up2date!
+### > Good for ASP.NET compromised Machine Key testing!
+###
+### This is Crap(Bad)Secrets
 
 ```
 mkdir -p ~/ctools/
