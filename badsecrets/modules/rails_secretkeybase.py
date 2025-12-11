@@ -7,10 +7,10 @@ import urllib.parse
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from Crypto.Protocol.KDF import PBKDF2
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 
 
-class Rails_SecretKeyBase(BadsecretsBase):
+class Rails_SecretKeyBase(CrapsecretsBase):
     identify_regex = re.compile(r"^[\.a-zA-z-0-9\%=]{32,}--[\.a-zA-z-0-9%=]{16,}$")
     description = {"product": "Rails Signed Cookie", "secret": "Rails secret_key_base", "severity": "HIGH"}
 
@@ -40,9 +40,10 @@ class Rails_SecretKeyBase(BadsecretsBase):
                 return
 
             if len(base64.b64decode(iv)) == 16:
-                aes_secret = PBKDF2(secret_key_base, "encrypted cookie", 64, 1000)
-                cipher = AES.new(aes_secret[:32], AES.MODE_CBC, base64.b64decode(iv))
                 try:
+                    aes_secret = PBKDF2(secret_key_base, "encrypted cookie", 64, 1000)
+                    cipher = AES.new(aes_secret[:32], AES.MODE_CBC, base64.b64decode(iv)) 
+                              
                     dec = unpad(cipher.decrypt(base64.b64decode(data)), 16)
                     json_data = json.loads(dec.decode())
                     return {"json_data": json_data, "encryption_algorithm": "AES_CBC"}
@@ -51,11 +52,11 @@ class Rails_SecretKeyBase(BadsecretsBase):
 
         # Cookie is likey Rails 6 AES-GCM
         elif len(split_rails_cookie) == 3:
-            iv = split_rails_cookie[1]
-            aes_secret = PBKDF2(secret_key_base, "authenticated encrypted cookie", 64, 1000)
-            cipher = AES.new(aes_secret[:32], AES.MODE_GCM, nonce=base64.b64decode(iv))
-
             try:
+                iv = split_rails_cookie[1]
+                aes_secret = PBKDF2(secret_key_base, "authenticated encrypted cookie", 64, 1000)
+                cipher = AES.new(aes_secret[:32], AES.MODE_GCM, nonce=base64.b64decode(iv))
+
                 dec = cipher.decrypt(base64.b64decode(data))
                 json_data = json.loads(dec.decode())
                 return {"json_data": json_data, "encryption_algorithm": "AES_GCM"}

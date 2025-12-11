@@ -1,4 +1,4 @@
-from badsecrets.helpers import write_vlq_string
+from crapsecrets.helpers import write_vlq_string
 
 
 def test_vlq_encoding_multi_bytes():

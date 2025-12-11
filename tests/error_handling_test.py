@@ -1,5 +1,5 @@
-from badsecrets import modules_loaded
-import badsecrets.errors
+from crapsecrets import modules_loaded
+import crapsecrets.errors
 import random
 import string
 import os
@@ -12,7 +12,7 @@ def test_handle_bad_resource():
             rand_string = "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
             mod(custom_resource=f"/tmp/{rand_string}")
             assert False
-        except badsecrets.errors.LoadResourceException:
+        except crapsecrets.errors.LoadResourceException:
             assert True
 
 
@@ -22,7 +22,7 @@ def test_load_resource():
         try:
             mod(custom_resource="/etc/passwd")
             assert True
-        except badsecrets.errors.LoadResourceException:
+        except crapsecrets.errors.LoadResourceException:
             assert False
 
 
@@ -30,7 +30,7 @@ def test_use_custom_resource():
     Generic_JWT = modules_loaded["generic_jwt"]
 
     x = Generic_JWT(
-        custom_resource=f"{os.path.dirname(os.path.abspath(__file__))}/../badsecrets/resources/jwt_secrets.txt"
+        custom_resource=f"{os.path.dirname(os.path.abspath(__file__))}/../crapsecrets/resources/jwt_secrets.txt"
     )
     r = x.check_secret(
         "eyJhbGciOiJIUzI1NiJ9.eyJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkJhZFNlY3JldHMiLCJleHAiOjE1OTMxMzM0ODMsImlhdCI6MTQ2NjkwMzA4M30.ovqRikAo_0kKJ0GVrAwQlezymxrLGjcEiW_s3UJMMCo"

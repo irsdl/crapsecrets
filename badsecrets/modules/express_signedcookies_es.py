@@ -4,7 +4,7 @@ import base64
 import binascii
 import urllib.parse
 from contextlib import suppress
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 
 
 def no_padding_urlsafe_base64_decode(enc):
@@ -15,7 +15,7 @@ def no_padding_urlsafe_base64_encode_es(enc):
     return base64.urlsafe_b64encode(enc).decode().rstrip("=").replace("-", "+").replace("_", "/")
 
 
-class ExpressSignedCookies_ES(BadsecretsBase):
+class ExpressSignedCookies_ES(CrapsecretsBase):
     identify_regex = re.compile(r"^s%3[Aa][^\.]+\.(?!.*%20|.*%22)[a-zA-Z0-9%]{20,90}$")
     description = {
         "product": "Express.js Signed Cookie (express-session)",
@@ -25,7 +25,7 @@ class ExpressSignedCookies_ES(BadsecretsBase):
 
     def carve_regex(self):
         return re.compile(r"(?<!http)(s%3[Aa][^.]+\.(?![^ ]*%20|[^ ]*%22)[a-zA-Z0-9%]{20,90})")
-
+    
     def expressHMAC(self, payload, secret, hash_algorithm):
         return no_padding_urlsafe_base64_encode_es(
             hmac.HMAC(secret.encode(), payload.encode(), hash_algorithm).digest()

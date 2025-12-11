@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Generic_JWT = modules_loaded["generic_jwt"]
 

@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 ExpressSignedCookies_ES = modules_loaded["express_signedcookies_es"]
 ExpressSignedCookies_CS = modules_loaded["express_signedcookies_cs"]

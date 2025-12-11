@@ -1,9 +1,9 @@
 import pytest
 import base64
 import urllib.parse
-from badsecrets import modules_loaded
-from badsecrets.errors import Telerik_EncryptionKey_Exception
-from badsecrets.helpers import Csharp_pbkdf1, Csharp_pbkdf1_exception
+from crapsecrets import modules_loaded
+from crapsecrets.errors import Telerik_EncryptionKey_Exception
+from crapsecrets.helpers import Csharp_pbkdf1, Csharp_pbkdf1_exception
 
 Telerik_EncryptionKey = modules_loaded["telerik_encryptionkey"]
 Telerik_HashKey = modules_loaded["telerik_hashkey"]

@@ -3,12 +3,12 @@ import hmac
 import base64
 
 
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 
 # Special thanks to Ambionics Security for their blog post: https://www.ambionics.io/blog/symfony-secret-fragment
 
 
-class Symfony_SignedURL(BadsecretsBase):
+class Symfony_SignedURL(CrapsecretsBase):
     identify_regex = re.compile(r"http(?:s)?:\/\/[^\/]+\/_fragment[^\s]+_hash=[\/a-zA-z-0-9\+=%]{24,132}")
     description = {"product": "Symfony Signed URL", "secret": "Symfony APP_SECRET", "severity": "CRITICAL"}
 

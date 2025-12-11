@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 FlaskSignedCookies = modules_loaded["flask_signedcookies"]
 

@@ -2,7 +2,7 @@ import re
 import jwt as j
 import json
 import base64
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 
 # XMLDSIG Translation Table
 
@@ -22,7 +22,7 @@ XMLDSIG_table = {
 }
 
 
-class Generic_JWT(BadsecretsBase):
+class Generic_JWT(CrapsecretsBase):
     identify_regex = re.compile(r"eyJ(?:[\w-]*\.)(?:[\w-]*\.)[\w-]*")
     description = {"product": "JSON Web Token (JWT)", "secret": "HMAC/RSA Key", "severity": "HIGH"}
 

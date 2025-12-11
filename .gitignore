@@ -1,1 +1,7 @@
 *.pyc
+/local
+/.vscode/launch.json
+B
+.vscode/launch.json
+/venv
+/__pycache__

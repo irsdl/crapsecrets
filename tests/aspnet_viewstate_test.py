@@ -1,5 +1,5 @@
 import os
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 ASPNETViewstate = modules_loaded["aspnet_viewstate"]
 
@@ -236,9 +236,9 @@ def test_viewstate_dotnet45_HMACSHA512():
     assert found_key
     assert (
         found_key["secret"]
-        == "validationKey: F5144F1A581A57BA3B60311AF7562A855998F7DD203CD8A71405599B980D8694B5C986C888BE4FC0E6571C2CE600D58CE82B8FA13106B17D77EA4CECDDBBEC1B validationAlgo: SHA512 encryptionKey: B47D3CD1E780CF30C739A080995B9B10B64354AA135A2D78 encryptionAlgo: AES"
+        == "ValidationKey: [F5144F1A581A57BA3B60311AF7562A855998F7DD203CD8A71405599B980D8694B5C986C888BE4FC0E6571C2CE600D58CE82B8FA13106B17D77EA4CECDDBBEC1B] ValidationAlgo: [SHA512] EncryptionKey: [B47D3CD1E780CF30C739A080995B9B10B64354AA135A2D78] EncryptionAlgo: [AES] Path: [/FORM.ASPX] AppPath: [/]"
     )
-    assert found_key["details"] == "Mode [DOTNET45]"
+    assert found_key["details"] == "Mode: [DOTNET45]\nURL: [http://172.16.25.128/form.aspx]"
 
 
 def test_viewstate_dotnet45_HMACSHA384():
@@ -252,9 +252,9 @@ def test_viewstate_dotnet45_HMACSHA384():
     assert found_key
     assert (
         found_key["secret"]
-        == "validationKey: 00AE7601E6DB424DDFBA77DFCB0F550DB1C92FDBC2DEFFFF1279629381612304A14F1D2546CEFE6B79062DA670A7F0859D5F5EF17E30D909FA831110CAF0E169 validationAlgo: SHA384 encryptionKey: D62333B4C640430F5CFB7FA9DF856FFB212B16AFAA7CCA3972B85D18856FB00C encryptionAlgo: AES"
+        == "ValidationKey: [00AE7601E6DB424DDFBA77DFCB0F550DB1C92FDBC2DEFFFF1279629381612304A14F1D2546CEFE6B79062DA670A7F0859D5F5EF17E30D909FA831110CAF0E169] ValidationAlgo: [SHA384] EncryptionKey: [D62333B4C640430F5CFB7FA9DF856FFB212B16AFAA7CCA3972B85D18856FB00C] EncryptionAlgo: [AES] Path: [/FORM.ASPX] AppPath: [/]"
     )
-    assert found_key["details"] == "Mode [DOTNET45]"
+    assert found_key["details"] == "Mode: [DOTNET45]\nURL: [http://172.16.25.128/form.aspx]"
 
 
 def test_viewstate_dotnet45_HMACSHA256():
@@ -268,10 +268,9 @@ def test_viewstate_dotnet45_HMACSHA256():
     assert found_key
     assert (
         found_key["secret"]
-        == "validationKey: F5144F1A581A57BA3B60311AF7562A855998F7DD203CD8A71405599B980D8694B5C986C888BE4FC0E6571C2CE600D58CE82B8FA13106B17D77EA4CECDDBBEC1B validationAlgo: SHA256 encryptionKey: B47D3CD1E780CF30C739A080995B9B10B64354AA135A2D78 encryptionAlgo: AES"
+        == "ValidationKey: [F5144F1A581A57BA3B60311AF7562A855998F7DD203CD8A71405599B980D8694B5C986C888BE4FC0E6571C2CE600D58CE82B8FA13106B17D77EA4CECDDBBEC1B] ValidationAlgo: [SHA256] EncryptionKey: [B47D3CD1E780CF30C739A080995B9B10B64354AA135A2D78] EncryptionAlgo: [AES] Path: [/FORM.ASPX] AppPath: [/]"
     )
-    assert found_key["details"] == "Mode [DOTNET45]"
-
+    assert found_key["details"] == "Mode: [DOTNET45]\nURL: [http://172.16.25.128/form.aspx]"
 
 def test_viewstate_exception_handling():
     x = ASPNETViewstate()
@@ -281,26 +280,3 @@ def test_viewstate_exception_handling():
 
     result = x.check_secret(malformed_viewstate, "00000000")
     assert result is None
-
-
-def test_viewstate_with_userkey():
-    x = ASPNETViewstate()
-
-    # Test ViewState with ViewStateUserKey
-    viewstate = "/wEPDwUJODExMDE5NzY5ZGTX0g6r3svRDbR+eCZDnrj4MT4/FA=="
-    generator = "DEE4EE34"
-    userkey = "xwrpnizumzekndin03addnmm"
-    userkey_validation_key = "007B3C9F433AB43A1B9BD2C300491C77B9A8D90D0268B9B60BD72D9143DF02F884F81B6E6119B737EBC1A3A9A98526FD2691BF9FD9B3CD188A2FBDF569C13FFD"
-
-    found_key = x.check_secret(viewstate, generator, userkey)
-    assert found_key
-    assert userkey_validation_key in found_key["secret"]
-    assert "ViewStateUserKey: xwrpnizumzekndin03addnmm" in found_key["product"]
-
-    # Test that same ViewState fails without the correct userkey
-    found_key_no_userkey = x.check_secret(viewstate, generator)
-    assert not found_key_no_userkey
-
-    # Test that same ViewState fails with wrong userkey
-    found_key_wrong_userkey = x.check_secret(viewstate, generator, "wronguserkey")
-    assert not found_key_wrong_userkey

@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Peoplesoft_PSToken = modules_loaded["peoplesoft_pstoken"]
 

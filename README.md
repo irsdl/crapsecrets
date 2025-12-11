@@ -1,4 +1,89 @@
-# badsecrets
+# Copied from badsecrets repo
+# This is Crap(Bad)Secrets
+
+```
+mkdir -p ~/ctools/
+cd ~/ctools/
+git clone https://github.com/irsdl/crapsecrets/
+cd ~/ctools/crapsecrets
+pip3 install -r requirements.txt
+export PYTHONPATH=$(pwd):$PYTHONPATH
+python3 ./crapsecrets/examples/cli.py -u http://update.microsoft.com/ -r
+python3 ./crapsecrets/examples/cli.py -u http://update.microsoft.com/ -mrd 5
+python3 ./crapsecrets/examples/cli.py -mrd 5 -avsk -fvsp -u http://update.microsoft.com/
+python3 ./crapsecrets/examples/cli.py -mrd 5 -avsk -fvsp -mkf ./local/aspnet_machinekeys_local.txt -u http://192.168.6.22:8080/
+python3 ./crapsecrets/examples/cli.py -mrd 5 -avsk -fvsp -mkf ./local/aspnet_machinekeys_local.txt -mkf ./crapsecrets/resources/aspnet_machinekeys.txt -u http://192.168.6.22:8080/a1/b/c1/
+
+```
+
+## Tips for Viewstate
+- Run the command using `-mrd 5` to allow analysis of long redirect responses.
+- Use `--allviewstatekeys` or `-avsk` in order to try all the key combinations as validation and encryption keys 
+- Use `--findviewstatepage` or `-fvsp` in order to try a set of default pages when .aspx is missing from the URL
+
+## Generic Changes:
+- Uses httpx instead of requests (changes mainly made by AI with minimal testing, so they might be incorrect).
+- Adds depth to the redirection (the `--max-redirect-depth` argument for manual redirects).
+- Supports additional headers.
+- Request timeout can be set using the `--timeout` or `-t` argument
+
+## Viewstate Changes:
+- Contains more machine keys and some logical changes.
+- Shows a possibility for AES and 3DES for validation key in encrypted .NET 4.0 viewstates.
+- Removes cookieless values from the path.
+- Removes parameters after .aspx.
+- Removes multiple slash and backslash characters.
+- Improves .NET4.5 logic to use application names in subdirectories.
+- Detects when "MAC is not enabled".
+- Handles long redirection when there is a response (this is when -r to follow redirect is NOT used).
+- Handles redirection to another ASPX page (this is when -r to follow redirect is used).
+- Handles when Server.Transfer is used instead of a redirect (generator is different than the target).
+- Detects when MaxPageStateFieldLength is used and we have __VIEWSTATEFIELDCOUNT.
+- Supports a few predefined ViewStateUserKey in addition to checking the asp.net_sessionid and __antixsrftoken cookies in the response.
+- It detects decryption keys for 3DES in ASPNET4.5 properly
+- Adding an option to check all strings in aspnet_machinekeys.txt once as a validation key and once as decryption key. When we use the `--allviewstatekeys` flag, the tool attempts to find all Potential EncryptionKeys and tries each one in a random order to decrypt the data. Because so many keys are tested, there is a chance of hitting an invalid key on any single run. However, the tool will list every possible key it detects. By running the tool twice, you significantly increase the likelihood of finding a valid encryption key, since seeing the same key appear in both runs is nearly a 100% guarantee that it is correct.
+- Using an array of default pages when .aspx is not included in the given URL: `["default.aspx", "index.aspx", "main.aspx", "home.aspx" , "start.aspx", "welcome.aspx", "default2.aspx"]` - This increases the testing time significantly but can potentially lead to more findings
+- It can use `-mkf` or `--machinekeyfile` as a resource file for machinekeys so we can use a local version if it contains sensitive keys
+- It is using a customised version of python viewstate library to support more objects when parsing viewstate
+- Added the `-evsd` or `--enable-viewstate-decryption` argument to check for the decryption key even when the validation key has not been found. This can be useful when the validation key is slightly different from the original one in the list.
+- Calculates the `__VIEWSTATEGENERATOR` by identifying its hash code. It also tries to find the actual path and app path early if `__VIEWSTATEGENERATOR` and URL have been provided. This can potentially increase performance, especially when an identifiable default ASPX page is missing from the URL.
+- Users can specify the number of threads to use with the `-nt` or `--num-threads` option (only applicable for the viewstate module). The default is 1 which is surprisingly fater than 10 in most cases!
+- It should support files with no extensions but we will need to fix errors as they are being reported.
+- It suppors IsolateApps (useful for .NET40 legacy). This is when we have ",IsolateApps" after the validation or decryption keys.
+- It reduces number of apppaths by actively testing for it based on https://soroush.me/blog/2019/07/iis-application-vs-folder-detection-during-blackbox-testing/. It can be disabled by `-dap` or `--disable-active-path-check`
+- Check for __VIEWSTATE_KEY in the response body and use it as a viewstatekey too
+- Add public IP address to viewstate key based on session ID or then anti-XSRF token
+- It uses __EVENTVALIDATION when __VIEWSTATE is missing
+- It uses the encrypted resource values from `/WebResource.axd?d=` or `/ScriptResource.axd?d=` under a new module called "aspnet_resource.py". It also supports IsolateApps feature there too. This is useful when __VIEWSTATE and __EVENTVALIDATION are missing.
+
+## TODO:
+- Make adding public IP address to the potential viewstate keys
+- add a dictionary for common pages and directories when calculating viewstate
+- Implement support for IsolateApps (rely on the hashcode). This is when we have ",IsolateApps" after the validation or decryption key.
+- Implement support for IsolateByAppId (probably impossible as it requires a secret from registry which we shouldn't have!)
+- Add support for retry when there is an error.
+- Test errors due to replacing requests with httpx.
+- There are some failed tests due to the conversion from requests to httpx and the use of AI. They can be seen by running `pytest` in the root of the project. Although some of them have been fixed, there are still some errors in the tests that need addressing in the future. I also need to run pytest on the original repo to compare!
+
+```
+FAILED tests/all_modules_test.py::test_carve_all_cookies - AssertionError: assert 2 == 7
+FAILED tests/examples_blacklist3r_test.py::test_examples_blacklist3r_offline - AssertionError: assert 'Did not find viewstate in repsonse from URL' in 'Did not find viewstate in response...
+FAILED tests/examples_cli_test.py::test_example_cli_hashcat_telerikhashkey - AssertionError: assert 'Module: [Te...ture Command' not in '\x1b[32m\n ...y_file>]\n\n'
+FAILED tests/examples_cli_test.py::test_example_cli_hashcat_telerikhashkey_invalid2 - AssertionError: assert 'Known Secret Found!' in '\x1b[32m\n __ )              |                            ...
+FAILED tests/examples_symfony_signedurl_test.py::test_symfony_brute_success - AssertionError: assert 'Found Symfony Secret! [50c8215b436ebfcc1d568effb624a40e]' in 'Target appears to be ...
+FAILED tests/examples_telerik_knownkey_test.py::test_fullrun_PBKDF2 - KeyError: "'additional_matcher' is not a valid Pattern"
+FAILED tests/examples_telerik_knownkey_test.py::test_badoutput_PBKDF1_MS - KeyError: "'additional_matcher' is not a valid Pattern"
+FAILED tests/examples_telerik_knownkey_test.py::test_fullrun_asyncupload_earlydetection - KeyError: "'additional_matcher' is not a valid Pattern"
+FAILED tests/examples_telerik_knownkey_test.py::test_fullrun_asyncupload_success - KeyError: "'additional_matcher' is not a valid Pattern"
+FAILED tests/examples_telerik_knownkey_test.py::test_fullrun_asyncupload_PBKDF1_MS - KeyError: "'additional_matcher' is not a valid Pattern"
+```
+
+## Disclaimer 
+This software has been created purely for the purposes of academic research and for the development of effective defensive techniques, and is not intended to be used to attack systems except where explicitly authorized. Project maintainers are not responsible or liable for misuse of the software. Use responsibly.
+
+This software is a personal project and not related to any companies, including the project owner's and contributors' employers.
+
+# The original readme of badsecrets
 
 <p align="left"><img width="300" height="300" src="https://user-images.githubusercontent.com/24899338/223151619-6859bc93-1fe2-47c7-86a6-ecaa6b495ece.png"></p>
 
@@ -34,9 +119,8 @@ Inspired by [Blacklist3r](https://github.com/NotSoSecure/Blacklist3r), with a de
 | Express_SignedCookies_ES | Checks express.js express-session middleware for signed cookies and session cookies for known 'session secret' |
 | Express_SignedCookies_CS | Checks express.js cookie-session middleware for signed cookies and session cookies for known secret |
 | Laravel_SignedCookies | Checks 'laravel_session' cookies for known laravel 'APP_KEY' |
-| ASPNET_Compressedviewstate      | Checks for a once popular custom compressed Viewstate [code snippet](https://blog.sorcery.ie/posts/higherlogic_rce/) vulnerable to RCE|
+| ASPNET_Vstate      | Checks for a once popular custom compressed Viewstate [code snippet](https://blog.sorcery.ie/posts/higherlogic_rce/) vulnerable to RCE|
 | Rack2_SignedCookies | Checks Rack 2.x signed cookies for known secret keys |
-| Yii2_SignedCookies | Checks Yii2 framework signed cookies for known cookie validation keys |
 
 ## Installation
 
@@ -215,30 +299,6 @@ python ./badsecrets/examples/blacklist3r.py --viewstate /wEPDwUJODExMDE5NzY5ZGQM
 
 ### telerik_knownkey.py
 
-```bash
-badsecrets - Telerik UI known key exploitation tool
-
-usage: telerik_knownkey.py [-h] -u URL [-p PROXY] [-a USER_AGENT] [-m] [-f] [-v VERSION] [-c CUSTOM_KEYS] [-d] [--modern-dialog-params]
-
-options:
-  -h, --help            show this help message and exit
-  -u URL, --url URL     The URL of the page to access and attempt to pull viewstate and generator from
-  -p PROXY, --proxy PROXY
-                        Optionally specify an HTTP proxy
-  -a USER_AGENT, --user-agent USER_AGENT
-                        Optionally set a custom user-agent
-  -m, --machine-keys    Optionally include ASP.NET MachineKeys when loading keys
-  -f, --force           Force enumeration of vulnerable AsyncUpload endpoint without user confirmation
-  -v VERSION, --version VERSION
-                        Specify a custom Telerik version to test
-  -c CUSTOM_KEYS, --custom-keys CUSTOM_KEYS
-                        Specify custom keys in format 'encryptionkey,hashkey'. When provided, only these keys will be tested.
-  -d, --debug           Enable debug mode to show detailed request information
-  --modern-dialog-params
-                        Use modern dialog parameters format (may work better for newer Telerik versions 2018+)
-
-```
-
 Fully functional CLI example for identifying known Telerik Hash keys (`Telerik.Upload.ConfigurationHashKey`) and Encryption keys (`Telerik.Web.UI.DialogParametersEncryptionKey`) used with Telerik DialogHandler instances for Post-2017 versions (those patched for CVE-2017-9248), and brute-forcing version / generating exploitation DialogParameters values.
 
 Currently, this appears to be the only tool capable of building a working exploit URL for "patched" versions of Telerik.
@@ -305,10 +365,8 @@ Symfony_SignedURL = modules_loaded["symfony_signedurl"]
 Express_SignedCookies_ES = modules_loaded["express_signedcookies_es"]
 Express_SignedCookies_CS = modules_loaded["express_signedcookies_cs"]
 Laravel_SignedCookies = modules_loaded["laravel_signedcookies"]
-ASPNET_Compressed_Viewstate = modules_loaded["aspnet_compressedvstate"]
+ASPNET_Vstate = modules_loaded["aspnet_vstate"]
 Rack2_SignedCookies = modules_loaded["rack2_signedcookies"]
-Yii2_SignedCookies = modules_loaded["yii2_signedcookies"]
-
 
 x = ASPNET_Viewstate()
 print(f"###{str(x.__class__.__name__)}###")
@@ -419,7 +477,7 @@ else:
     print("KEY NOT FOUND :(")
 
 
-x = ASPNET_Compressed_Viewstate()
+x = ASPNET_Vstate()
 print(f"###{str(x.__class__.__name__)}###")
 r = x.check_secret("H4sIAAAAAAAEAPvPyJ/Cz8ppZGpgaWpgZmmYAgAAmCJNEQAAAA==")
 if r:
@@ -434,30 +492,23 @@ if r:
     print(r)
 else:
     print("KEY NOT FOUND :(")
-
-x = Yii2_SignedCookies()
-print(f"###{str(x.__class__.__name__)}###")
-r = x.check_secret("0bb72f36d041a3a022f231eebe114889ee442092ee350242ffb2d4bb53887a81a%3A2%3A%7Bi%3A0%3Bs%3A4%3A%22lang%22%3Bi%3A1%3Bs%3A7%3A%22English%22%3B%7D")
-if r:
-    print(r)
-else:
-    print("KEY NOT FOUND :(")
-
 ```
 
 #### Carve
-An additional layer of abstraction above check_secret, which accepts a python requests.response object or a string
+An additional layer of abstraction above check_secret, which accepts a python httpx.response object or a string
 
 ```python
-import requests
+import httpx
 from badsecrets import modules_loaded
 Telerik_HashKey = modules_loaded["telerik_hashkey"]
 
 x = Telerik_HashKey()
 
-res = requests.get(f"http://example.com/")
-r_list = x.carve(requests_response=res)
-print(r_list)
+# Create an HTTP client that ignores certificate errors
+with httpx.Client() as client:
+    res = client.get("http://example.com/", verify=False)
+    r_list = x.carve(requests_response=res)
+    print(r_list)
 
 telerik_dialogparameters_sample = """
 Sys.Application.add_init(function() {
@@ -496,14 +547,16 @@ for test in tests:
 
 ### Carve all modules at once
 ```python
-import requests
+import httpx
 from badsecrets.base import carve_all_modules
     
-### using python requests response object
+### using python httpx response object
 
-res = requests.get(f"http://example.com/")
-r_list = carve_all_modules(requests_response=res)
-print(r_list)
+# Create an HTTP client that ignores certificate errors
+with httpx.Client(verify=False) as client:
+    res = client.get("http://example.com/")
+    r_list = carve_all_modules(requests_response=res)
+    print(r_list)
 
 ### Using string
 

@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Jsf_viewstate = modules_loaded["jsf_viewstate"]
 

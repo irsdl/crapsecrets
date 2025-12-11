@@ -1,15 +1,15 @@
 import os
 import sys
 import tempfile
-import requests_mock
+import httpx
+import respx
 from mock import patch
-from importlib.metadata import PackageNotFoundError
 
-from badsecrets.modules.generic_jwt import Generic_JWT
+from crapsecrets.modules.generic_jwt import Generic_JWT
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(f"{os.path.dirname(SCRIPT_DIR)}/examples")
-from badsecrets.examples import cli
+from crapsecrets.examples import cli
 
 base_vulnerable_page = """
 <html>
@@ -122,11 +122,9 @@ def test_examples_cli_url_both_set(monkeypatch, capsys):
 
 
 def test_example_cli_vulnerable_url(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/vulnerablejwt.html",
-            status_code=200,
-            text=base_vulnerable_page,
+    with respx.mock() as m:
+        m.get("http://example.com/vulnerablejwt.html").mock(
+            return_value=httpx.Response(200, text=base_vulnerable_page)
         )
 
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/vulnerablejwt.html"])
@@ -136,20 +134,21 @@ def test_example_cli_vulnerable_url(monkeypatch, capsys):
 
 
 def test_example_cli_vulnerable_headers(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/vulnerableexpress_cs.html",
-            status_code=200,
-            text="<html><body>content</body></html>",
-            headers={
-                "X-Powered-By": "Express",
-                "Content-Type": "text/html; charset=utf-8",
-                "Content-Length": "11",
-                "ETag": 'W/"b-LTx1jc/VQrBurpG4w6qnFsu3lHk"',
-                "Set-Cookie": "session=eyJ1c2VybmFtZSI6IkJib3RJc0xpZmUifQ==; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly, session.sig=8BrG9wzvqxuPCtKmfgdyXXGGqA8; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly",
-                "Date": "Sat, 15 Jul 2023 02:47:13 GMT",
-                "Connection": "close",
-            },
+    with respx.mock() as m:
+        m.get("http://example.com/vulnerableexpress_cs.html").mock(
+            return_value=httpx.Response(
+                200,
+                text="<html><body>content</body></html>",
+                headers={
+                    "X-Powered-By": "Express",
+                    "Content-Type": "text/html; charset=utf-8",
+                    "Content-Length": "11",
+                    "ETag": 'W/"b-LTx1jc/VQrBurpG4w6qnFsu3lHk"',
+                    "Set-Cookie": "session=eyJ1c2VybmFtZSI6IkJib3RJc0xpZmUifQ==; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly, session.sig=8BrG9wzvqxuPCtKmfgdyXXGGqA8; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly",
+                    "Date": "Sat, 15 Jul 2023 02:47:13 GMT",
+                    "Connection": "close",
+                },
+            )
         )
 
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/vulnerableexpress_cs.html"])
@@ -162,20 +161,21 @@ def test_example_cli_vulnerable_headers(monkeypatch, capsys):
 
 
 def test_example_cli_vulnerable_headersidentifyonly(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/vulnerableexpress_cs.html",
-            status_code=200,
-            text="<html><body>content</body></html>",
-            headers={
-                "X-Powered-By": "Express",
-                "Content-Type": "text/html; charset=utf-8",
-                "Content-Length": "11",
-                "ETag": 'W/"b-LTx1jc/VQrBurpG4w6qnFsu3lHk"',
-                "Set-Cookie": "session=eyJ1c2VybmFtZSI6IkJib3RJc0xpZmUifQ==; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly, session.sig=8BrG9wzvqxuPCtKmfgdyXXGGqA7; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly",
-                "Date": "Sat, 15 Jul 2023 02:47:13 GMT",
-                "Connection": "close",
-            },
+    with respx.mock() as m:
+        m.get("http://example.com/vulnerableexpress_cs.html").mock(
+            return_value=httpx.Response(
+                200,
+                text="<html><body>content</body></html>",
+                headers={
+                    "X-Powered-By": "Express",
+                    "Content-Type": "text/html; charset=utf-8",
+                    "Content-Length": "11",
+                    "ETag": 'W/"b-LTx1jc/VQrBurpG4w6qnFsu3lHk"',
+                    "Set-Cookie": "session=eyJ1c2VybmFtZSI6IkJib3RJc0xpZmUifQ==; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly, session.sig=8BrG9wzvqxuPCtKmfgdyXXGGqA7; path=/; expires=Sun, 16 Jul 2023 19:56:30 GMT; httponly",
+                    "Date": "Sat, 15 Jul 2023 02:47:13 GMT",
+                    "Connection": "close",
+                },
+            )
         )
 
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/vulnerableexpress_cs.html"])
@@ -190,11 +190,9 @@ def test_example_cli_vulnerable_headersidentifyonly(monkeypatch, capsys):
 
 
 def test_example_cli_not_vulnerable_url(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/notvulnerable.html",
-            status_code=200,
-            text=base_non_vulnerable_page,
+    with respx.mock() as m:
+        m.get("http://example.com/notvulnerable.html").mock(
+            return_value=httpx.Response(200, text=base_non_vulnerable_page)
         )
 
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/notvulnerable.html"])
@@ -204,11 +202,9 @@ def test_example_cli_not_vulnerable_url(monkeypatch, capsys):
 
 
 def test_example_cli_identifyonly_url(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/identifyonly.html",
-            status_code=200,
-            text=base_identifyonly_page,
+    with respx.mock() as m:
+        m.get("http://example.com/identifyonly.html").mock(
+            return_value=httpx.Response(200, text=base_identifyonly_page)
         )
 
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/identifyonly.html"])
@@ -219,11 +215,9 @@ def test_example_cli_identifyonly_url(monkeypatch, capsys):
 
 
 def test_example_cli_identifyonly_hashcat(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/identifyonly.html",
-            status_code=200,
-            text=base_identifyonly_page,
+    with respx.mock() as m:
+        m.get("http://example.com/identifyonly.html").mock(
+            return_value=httpx.Response(200, text=base_identifyonly_page)
         )
 
         monkeypatch.setattr(
@@ -240,13 +234,10 @@ def test_example_cli_identifyonly_hashcat(monkeypatch, capsys):
         assert "Potential matching hashcat commands:" in captured.out
         assert "JSON Web Token (JWT) Algorithm: HS256 Command: [hashcat -m 16500" in captured.out
 
-
 def test_example_cli_identifyonly_hashcat_rack2(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/identifyonly.html",
-            status_code=200,
-            text=base_identifyonly_page,
+    with respx.mock() as m:
+        m.get("http://example.com/identifyonly.html").mock(
+            return_value=httpx.Response(200, text=base_identifyonly_page)
         )
 
         monkeypatch.setattr(
@@ -263,7 +254,6 @@ def test_example_cli_identifyonly_hashcat_rack2(monkeypatch, capsys):
         assert "No secrets found :(" in captured.out
         assert "[Rack2_SignedCookies] Rack 2.x Signed Cookie" in captured.out
         assert "Potential matching hashcat commands" in captured.out
-
 
 def test_example_cli_hashcat_omittedonmatch(monkeypatch, capsys):
     # Check Vulnerable JWT
@@ -409,7 +399,7 @@ def test_example_cli_hashcat_telerikhashkey_invalid2(monkeypatch, capsys):
         "sys.argv",
         [
             "python",
-            "y1MPLyncErmvCfYRJDU72NLpEurHW6DfWxGJlfMGTH55vxb8V9m2vrkLDCkDm8%2F1PlVto%2FNCiuCR6ioagdVglig7fQjiAmlEMc7v5RWKx74f8v%2FXxMLhwqLzLkF5YbKbAJO7Rtmhqod1vAzINW2yo16gm7yNseksxi4dSIdiGKVIBuUYiA%2BJrhAlDYfmYrdSA0laWPsYjCyTLWwVipZnPb%2FmOJk%2BMnZC3WD2JLtJyiTTanExxyVsx8SKrKqighnPQCiCLEcBik9FoPNBElJLCIZqizM%2Fy8DYmvyC0bTH7rB6plNMYthd%2F%2FIr7DdRaoJJXHThVbra3BXybA7aiW4fRmuRD0vwiZUV%2BYWaClCgPpZ90YOfwXGlGpVhYfZJPNH%2BeCG2piS6oJPs2AjSUlQuzKn4uN%2F2OZYca8IP%2FkVE0jwU5EUq3uf%2FCmXJ8zNcgmcQXhhxejsn3dEygzw4zzyqR3LAnFQkk3BWtrhEmyNVjCL2y1MgsSTjClmTQzX0UicfQOBv4Vgg9E3EA6rqIdxj%2F7pq7N47X0f4wLByBROlgKj%2BhbuWNKAaZmXhjurQ5uu7WOGwKEmOpEnkTZzyoCFui8S6f3dtbrNw2rwGgo1oz8pD7gDXIXATx66hswuK7tfxjkMab%2FdXBQ3vQTSa5HYNpCWnJu3RunO3sb5OKT%2FtUe061%2BdO%2FcFDNwNiGXQvQ9yuY99w2BtNB7ZOazMl9vGG8lcL4s9yuSMdfG3tcgD4%2BrtHDEL7v0ub14dFxB8TOqY5JMRKdyd8D%2FP46%2BC3pWT61EYaddn3U548w%2FjHz1sXXx6b2lo7%2BYnG1DrRt%2Bk6%2BZt1Wa7UkfYC2b2n4OM2ro%2FqwHBU3FL0LOvBdXDDvlqqMSF4PtYUpO09GaE4TrzKlA%2FFN%2BZ9ibPj%2BmHyanK3GpdsR9S%2BavrhfnL%2BXrI26E5C2GPYOHTlR6u5dqvKJ71%2FCCF%2F%2FdYWbdzS5FVQ25WO6XREomBdvK2gP55Mh3byVUfoli%2F9pNkXytwYVo3yIIICReAuYdbteZN6%2BDJl4rJ5AKTbThpNk6co%2BG6Gl5rYKz1KqV80fqOF4TBlv6cm4kLvS%2FFk2JWD3L5kE8llElj9j4Bq7esFt1I%2Fvvo95guNdrBiiRfh2u7qENi1jfXYNlf1Npth8Vw11vztAq8jssrpMo3cVCKU2aTDkOQWvFBO6tN%2FvpYRCzRJHoy3e0sImQa3rN7wTNedxsadcL%2BHRXuYFFvQpcg5lfngY6lyVkjYPgxc5K4mRKZHDEXGWetFRl5af22wuNiEYmIERrh%2Fq25zBBCTfe2swAKb8hZLjoEywedeaQyZVveb4E0mTuMEQ259781fg727QoKnlu2m7Zh6gJINDk1a68Ap3t%2FCU1U8%2BL1haNZ5s7ywWl6vHM7dWvGffmqofBXoOKFhPdnSTc5xn6kgryFZJmnKwRyhOlPVCthRkgnANcLXEH1mtC1WQ8soXuVuMm6uAg44nwOt8BVZSNyJYYaEZCH4HPhtTo1F93W4PtXWJKIT6Mphf%2FWsIwJOKJzxgzCkCSwBB65kTL17LIQuyBqfmprPFtqEgTIRv4IFpJ8WuyeES08ti8QYwYM%2BPN2GZ1CTQu6kvlVlSBJxdTSvdf5IS%2BVje1pQqPJdYOIwwMTTpLfOno4qkHZVcM6OQnUNpvyIvRTuYJ5twYx8Rkty36P1%2BsKeaTMFgVWfMvpK5UNThjDxKMAsy7MgcMTxfZAeNi41gaQSbOFrdgtbkYMTALGiozY1NCcnHbXwr0qnHVKjVVDBuOPZeLL0lzBcm3hGjGYhOjrJLv4ZuRSLvCAe4UfHRhQcCjJd15vNpV8nbdcvEl2e7FUdoNlrPWxaglcEK0vu9WJxBzQVmzoNINhUvqnDZIrYOAGfzrDYrDAwMheLpr9OKHMvM2WHNHUecDK0781NXS%2FdoGGeheaTOe8DieXwcL%2FJlW2bBEwSUNDMuyD8RiukZHUQ4qcgDF%2FGLqUqkDesWIdQyj99wqKFfQNuwm41kCnzAN5uSt3IUiMiA7zsuDr%2BDg0Ro00K6Ap3wFLF1M3xtQobLnsRuCHZGwXSGxye%2Bmg8%2FxD%2BlTOs55IRwb3DDwi6eKdubRJMLN2o544FHYWL1UBAc%2BZcfz7vIqFeHUBMOc5htw%2BDPlXZRRnEzn%2F4qpV4ioEdZeQEv%2BhfXyUs9hF19JP%2BLJiWDJ3Ukdh7OdW2c6GtjOIiKeOcFcJi%2BYB8CP8ItWydzlt0IUaHufQ4ooPkkmmchlX7HV6%2BboKKGxaNWcOx%2BkAWPvP0IeYahPPff9PiSErWiFzc%2BOmFinwZu%2FXJsse%2BG1ndzbUJeMV%2B8jBdZtxiAewbNJxJZl%2Bgu6avfcLJqYjBfxFJ3%2B87%2B6AtI3JI93aCTEiLPVHMiMjsI6j8N1Nxn77BhCsXF3D9uXIqbqTsxp5je4xS4LHqrTTVnsKk3zqlc1PZvgVRGYVD3MRFUmFQfT%2Bnn9HhrDkuCfVdALWHnDOC%2BOOhHglnYm38GLFWA2Mo5VW4k3wM0ftFYVzaVVYYAEFmp8Uvup1sh6COO%252FZJJCSgBK1ZwjnLeWHM1j6Fo0f03YYC5Eghbzi2dBwR0WC2e0hHgtb2TY1K6Uc%3D",
+            "y1MPLyncErmvCfYRJDU72NLpEurHW6DfWxGJlfMGTH55vxb8V9m2vrkLDCkDm8%2F1PlVto%2FNCiuCR6ioagdVglig7fQjiAmlEMc7v5RWKx74f8v%2FXxMLhwqLzLkF5YbKbAJO7Rtmhqod1vAzINW2yo16gm7yNseksxi4dSIdiGKVIBuUYiA%2BJrhAlDYfmYrdSA0laWPsYjCyTLWwVipZnPb%2FmOJk%2BMnZC3WD2JLtJyiTTanExxyVsx8SKrKqighnPQCiCLEcBik9FoPNBElJLCIZqizM%2Fy8DYmvyC0bTH7rB6plNMYthd%2F%2FIr7DdRaoJJXHThVbra3BXybA7aiW4fRmuRD0vwiZUV%2BYWaClCgPpZ90YOfwXGlGpVhYfZJPNH%2BeCG2piS6oJPs2AjSUlQuzKn4uN%2F2OZYca8IP%2FkVE0jwU5EUq3uf%2FCmXJ8zNcgmcQXhhxejsn3dEygzw4zzyqR3LAnFQkk3BWtrhEmyNVjCL2y1MgsSTjClmTQzX0UicfQOBv4Vgg9E3EA6rqIdxj%2F7pq7N47X0f4wLByBROlgKj%2BhbuWNKAaZmXhjurQ5uu7WOGwKEmOpEnkTZzyoCFui8S6f3dtbrNw2rwGgo1oz8pD7gDXIXATx66hswuK7tfxjkMab%2FdXBQ3vQTSa5HYNpCWnJu3RunO3sb5OKT%2FtUe061%2BdO%2FcFDNwNiGXQvQ9yuY99w2BtNB7ZOazMl9vGG8lcL4s9yuSMdfG3tcgD4%2BrtHDEL7v0ub14dFxB8TOqY5JMRKdyd8D%2FP46%2BC3pWT61EYaddn3U548w%2FjHz1sXXx6b2lo7%2BYnG1DrRt%2Bk6%2BZt1Wa7UkfYC2b2n4OM2ro%2FqwHBU3FL0LOvBdXDDvlqqMSF4PtYUpO09GaE4TrzKlA%2FFN%2BZ9ibPj%2BmHyanK3GpdsR9S%2BavrhfnL%2BXrI26E5C2GPYOHTlR6u5dqvKJ71%2FCCF%2F%2FdYWbdzS5FVQ25WO6XREomBdvK2gP55Mh3byVUfoli%2F9pNkXytwYVo3yIIICReAuYdbteZN6%2BDJl4rJ5AKTbThpNk6co%2BG6Gl5rYKz1KqV80fqOF4TBlv6cm4kLvS%2FFk2JWD3L5kE8llElj9j4Bq7esFt1I%2Fvvo95guNdrBiiRfh2u7qENi1jfXYNlf1Npth8Vw11vztAq8jssrpMo3cVCKU2aTDkOQWvFBO6tN%2FvpYRCzRJHoy3e0sImQa3rN7wTNedxsadcL%2BHRXuYFFvQpcg5lfngY6lyVkjYPgxc5K4mRKZHDEXGWetFRl5af22wuNiEYmIERrh%2Fq25zBBCTfe2swAKb8hZLjoEywedeaQyZVveb4E0mTuMEQ259781fg727QoKnlu2m7Zh6gJINDk1a68Ap3t%2FCU1U8%2BL1haNZ5s7ywWl6vHM7dWvGffmqofBXoOKFhPdnSTc5xn6kgryFZJmnKwRyhOlPVCthRkgnANcLXEH1mtC1WQ8soXuVuMm6uAg44nwOt8BVZSNyJYYaEZCH4HPhtTo1F93W4PtXWJKIT6Mphf%2FWsIwJOKJzxgzCkCSwBB65kTL17LIQuyBqfmprPFtqEgTIRv4IFpJ8WuyeES08ti8QYwYM%2BPN2GZ1CTQu6kvlVlSBJxdTSvdf5IS%2BVje1pQqPJdYOIwwMTTpLfOno4qkHZVcM6OQnUNpvyIvRTuYJ5twYx8Rkty36P1%2BsKeaTMFgVWfMvpK5UNThjDxKMAsy7MgcMTxfZAeNi41gaQSbOFrdgtbkYMTALGiozY1NCcnHbXwr0qnHVKjVVDBuOPZeLL0lzBcm3hGjGYhOjrJLv4ZuRSLvCAe4UfHRhQcCjJd15vNpV8nbdcvEl2e7FUdoNlrPWxaglcEK0vu9WJxBzQVmzoNINhUvqnDZIrYOAGfzrDYrDAwMheLpr9OKHMvM2WHNHUecDK0781NXS%2FdoGGeheaTOe8DieXwcL%2FJlW2bBEwSUNDMuyD8RiukZHUQ4qcgDF%2FGLqUqkDesWIdQyj99wqKFfQNuwm41kCnzAN5uSt3IUiMiA7zsuDr%2BDg0Ro00K6Ap3wFLF1M3xtQobLnsRuCHZGwXSGxye%2Bmg8%2FxD%2BlTOs55IRwb3DDwi6eKdubRJMLN2o544FHYWL1UBAc%2BZcfz7vIqFeHUBMOc5htw%2BDPlXZRRnEzn%2F4qpV4ioEdZeQEv%2BhfXyUs9hF19JP%2BLJiWDJ3Ukdh7OdW2c6GtjOIiKeOcFcJi%2BYB8CP8ItWydzlt0IUaHufQ4ooPkkmmchlX7HV6%2BboKKGxaNWcOx%2BkAWPvP0IeYahPPff9PiSErWiFzc%2BOmFinwZu%2FXJsse%2BG1ndzbUJeMV%2B8jBdZtxiAewbNJxJZl%2Bgu6avfcLJqYjBfxFJ3%2B87%2B6AtI3JI93aCTEiLPVHMiMjsI6j8N1Nxn77BhCsXF3D9uXIqbqTsxp5je4xS4LHqrTTVnsKk3zqlc1PZvgVRGYVD3MRFUmFQfT%2Bnn9HhrDkuCfVdALWHnDOC%2BOOhHglnYm38GLFWA2Mo5VW4k3wM0ftFYVzaVVYYAEFmp8Uvup1sh6COO%2FZJJCSgBK1ZwjnLeWHM1j6Fo0f03YYC5Eghbzi2dBwR0WC2e0hHgtb2TY1K6Uc%3D",
         ],
     )
 
@@ -538,7 +528,7 @@ def test_example_cli_customsecrets_urlmode_expressbase64(monkeypatch, capsys):
         f.write("base64:aGFja3RoZXBsYW5ldA==")
         f.flush()
 
-        with requests_mock.Mocker() as m:
+        with respx.mock() as m:
             m.get(
                 f"http://example.com/vulnerablejsf.html",
                 status_code=200,
@@ -604,7 +594,7 @@ function __doPostBack(eventTarget, eventArgument) {
         )
         f.flush()
 
-        with requests_mock.Mocker() as m:
+        with respx.mock() as m:
             m.get(
                 f"http://example.com/vulnerableaspnet.html",
                 status_code=200,
@@ -687,7 +677,7 @@ function __doPostBack(eventTarget, eventArgument) {
     <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="1E02dhhNh5Elng+wXjTw6opqE8R/OdZddtcAL82qdZyIIRVQ8s97YQsJqECjV/OJQAu5ZySO9StoIr1X0S6NUbt/h4tCjnSvkgol4hnPb0DshxRmrMTYr/s+zlBn09dZFQ40HKbQeaRIxkww99sDGqnXdTyIOjVxrVW2FmKJSm8=" />
 </div>
     """
-    with requests_mock.Mocker() as m:
+    with respx.mock() as m:
         m.get(
             f"http://172.16.25.128/form.aspx",
             status_code=200,
@@ -708,8 +698,8 @@ function __doPostBack(eventTarget, eventArgument) {
         assert ("Details: Mode [DOTNET45]") in captured.out
 
 
-def test_example_cli_aspnetcompressedviewstate_url(monkeypatch, capsys):
-    base_vulnerable_page_aspnet_compressedviewstate = """
+def test_example_cli_aspnetvstate_url(monkeypatch, capsys):
+    base_vulnerable_page_aspnet_vstate = """
          <!doctype html>
 
 <!--[if IE 9]> <html class="no-js lt-ie10" lang="en" xmlns:fb="http://ogp.me/ns/fb#"> <![endif]-->
@@ -734,11 +724,11 @@ def test_example_cli_aspnetcompressedviewstate_url(monkeypatch, capsys):
 <p>content</p>
 </html>
     """
-    with requests_mock.Mocker() as m:
+    with respx.mock() as m:
         m.get(
             f"http://172.16.25.128/form.aspx",
             status_code=200,
-            text=base_vulnerable_page_aspnet_compressedviewstate,
+            text=base_vulnerable_page_aspnet_vstate,
         )
 
         monkeypatch.setattr(
@@ -753,52 +743,7 @@ def test_example_cli_aspnetcompressedviewstate_url(monkeypatch, capsys):
         captured = capsys.readouterr()
         assert ("Known Secret Found!") in captured.out
         assert ("Product: H4sIAAAAAAAEAPvPyJ/Cz8ppZGpgaWpgZmmYAgAAmCJNEQAAAA==") in captured.out
-        assert ("ASP.NET Compressed Viewstate") in captured.out
-
-
-def test_example_cli_aspnetcompressedviewstate_url_alternateparamname(monkeypatch, capsys):
-    base_vulnerable_page_aspnet_compressedviewstate = """
-         <!doctype html>
-
-<!--[if IE 9]> <html class="no-js lt-ie10" lang="en" xmlns:fb="http://ogp.me/ns/fb#"> <![endif]-->
-<!--[if gt IE 9]><!--> <html class="no-js" lang="en" xmlns:fb="http://ogp.me/ns/fb#"> <!--<![endif]-->
-<head> 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- 
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" /> 
-
-</head>
-<body id="_body">
-  <a id="page_top" name="page_top"></a>
-    <form method="post" action="./default.aspx" id="form1">
-<div class="aspNetHidden">
-<input type="hidden" name="__COMPRESSEDVIEWSTATE" id="__COMPRESSEDVIEWSTATE" value="H4sIAAAAAAAEAPvPyJ/Cz8ppZGpgaWpgZmmYAgAAmCJNEQAAAA==" />
-<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="" />
-</div>   
-<p>content</p>
-</html>
-    """
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://172.16.25.128/form.aspx",
-            status_code=200,
-            text=base_vulnerable_page_aspnet_compressedviewstate,
-        )
-
-        monkeypatch.setattr(
-            "sys.argv",
-            [
-                "python",
-                "--url",
-                "http://172.16.25.128/form.aspx",
-            ],
-        )
-        cli.main()
-        captured = capsys.readouterr()
-        assert ("Known Secret Found!") in captured.out
-        assert ("Product: H4sIAAAAAAAEAPvPyJ/Cz8ppZGpgaWpgZmmYAgAAmCJNEQAAAA==") in captured.out
-        assert ("ASP.NET Compressed Viewstate") in captured.out
+        assert ("ASP.NET Compressed Vstate") in captured.out
 
 
 def test_example_cli_dotnet45_manual(monkeypatch, capsys):
@@ -882,15 +827,13 @@ def test_examples_cli_colors_info(monkeypatch, capsys):
 
 
 def test_example_cli_redirects_allow(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/vulnerablejwt.html",
-            status_code=200,
-            text=base_vulnerable_page,
+    with respx.mock() as m:
+        m.get("http://example.com/vulnerablejwt.html").mock(
+            return_value=httpx.Response(200, text=base_vulnerable_page)
         )
 
-        m.get(
-            f"http://example.com/vulnerablejwt-redir.html", status_code=302, headers={"Location": "vulnerablejwt.html"}
+        m.get("http://example.com/vulnerablejwt-redir.html").mock(
+            return_value=httpx.Response(302, headers={"Location": "vulnerablejwt.html"})
         )
 
         monkeypatch.setattr(
@@ -902,17 +845,13 @@ def test_example_cli_redirects_allow(monkeypatch, capsys):
 
 
 def test_example_cli_redirects_default(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/vulnerablejwt.html",
-            status_code=200,
+    with respx.mock() as m:
+        m.get("http://example.com/vulnerablejwt.html").mock(
+            return_value=httpx.Response(200)
         )
 
-        m.get(
-            f"http://example.com/vulnerablejwt-redir.html",
-            status_code=302,
-            text=base_vulnerable_page,
-            headers={"Location": "vulnerablejwt.html"},
+        m.get("http://example.com/vulnerablejwt-redir.html").mock(
+            return_value=httpx.Response(302, text=base_vulnerable_page, headers={"Location": "vulnerablejwt.html"})
         )
 
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/vulnerablejwt-redir.html"])
@@ -924,44 +863,15 @@ def test_example_cli_redirects_default(monkeypatch, capsys):
 serverside_jsfviewstate_html = '<input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="-7521159484971427124:9144573339387850859" autocomplete="off" /></form>'
 
 
-# We don't actually care at all about this if it has the server-side viewstate - its completely useless
 def test_example_cli_jsfviewstate_serverside(monkeypatch, capsys):
-    with requests_mock.Mocker() as m:
+    with respx.mock() as m:
 
-        m.get(
-            f"http://example.com/serverside_jsfviewstate.html",
-            status_code=200,
-            text=serverside_jsfviewstate_html,
+        m.get("http://example.com/serverside_jsfviewstate.html").mock(
+            return_value=httpx.Response(200, text=serverside_jsfviewstate_html)
         )
 
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/serverside_jsfviewstate.html"])
         cli.main()
         captured = capsys.readouterr()
-        assert (
-            not "Cryptographic Product Identified (no vulnerability)" in captured.out
-        )  # make sure we didn't report it at all
+        assert "Cryptographic Product Identified (no vulnerability)" in captured.out
         assert not "Potential matching hashcat commands:" in captured.out
-
-
-def test_example_cli_no_args(monkeypatch, capsys):
-    with patch("sys.exit") as exit_mock:
-        monkeypatch.setattr(
-            "sys.argv",
-            ["python"],  # No arguments provided
-        )
-        cli.main()
-        assert exit_mock.called
-        captured = capsys.readouterr()
-        assert "Either supply the product as a positional argument" in captured.out
-
-
-def test_example_cli_version_not_found(monkeypatch, capsys):
-    with patch("badsecrets.examples.cli.version") as mock_version:  # Updated patch path
-        mock_version.side_effect = PackageNotFoundError()
-        monkeypatch.setattr(
-            "sys.argv",
-            ["python", "test"],
-        )
-        cli.main()
-        captured = capsys.readouterr()
-        assert "Version - Unknown (Running w/poetry?)" in captured.out

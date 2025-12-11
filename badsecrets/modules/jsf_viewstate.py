@@ -7,11 +7,11 @@ import urllib.parse
 from contextlib import suppress
 from Crypto.Util.Padding import unpad
 from Crypto.Cipher import DES3, AES, DES
-from badsecrets.helpers import Java_sha1prng
-from badsecrets.base import BadsecretsBase
+from crapsecrets.helpers import Java_sha1prng
+from crapsecrets.base import CrapsecretsBase
 
 
-class Jsf_viewstate(BadsecretsBase):
+class Jsf_viewstate(CrapsecretsBase):
     myfaces_candidate_decryption_algorithms = [DES3, AES, DES]
 
     identify_regex = re.compile(
@@ -176,7 +176,10 @@ class Jsf_viewstate(BadsecretsBase):
 
     def get_hashcat_commands(self, jsf_viewstate_value, *args):
         commands = []
-        decoded_viewstate = base64.b64decode(urllib.parse.unquote(jsf_viewstate_value))
+        try:
+            decoded_viewstate = base64.b64decode(urllib.parse.unquote(jsf_viewstate_value))
+        except binascii.Error:
+            return []
         sig = decoded_viewstate[:32]
         data = decoded_viewstate[32:]
 

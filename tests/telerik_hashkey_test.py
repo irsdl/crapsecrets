@@ -1,5 +1,5 @@
 import urllib.parse
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Telerik_HashKey = modules_loaded["telerik_hashkey"]
 

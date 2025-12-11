@@ -3,7 +3,7 @@ import hmac
 import base64
 import binascii
 from contextlib import suppress
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 
 
 def no_padding_urlsafe_base64_decode(enc):
@@ -14,7 +14,7 @@ def no_padding_urlsafe_base64_encode_cs(enc):
     return base64.urlsafe_b64encode(enc).decode().rstrip("=").replace("+", "-").replace("/", "_")
 
 
-class ExpressSignedCookies_CS(BadsecretsBase):
+class ExpressSignedCookies_CS(CrapsecretsBase):
     check_secret_args = 2
     identify_regex = re.compile(r"\w{1,200}\=eyJ[A-Za-z0-9=\\_]{4,512}")
     signature_regex = re.compile(r"^[A-Za-z0-9_-]{27}$")
@@ -23,7 +23,6 @@ class ExpressSignedCookies_CS(BadsecretsBase):
         "secret": "Express.js Secret (cookie-session)",
         "severity": "HIGH",
     }
-    validate_carve = False
 
     def carve_regex(self):
         return re.compile(r"(\w{1,64})=([^;]{4,512});.{0,100}?\1\.sig=([^;]{27,86})")

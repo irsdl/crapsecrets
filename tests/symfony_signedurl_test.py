@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Symfony_SignedURL = modules_loaded["symfony_signedurl"]
 

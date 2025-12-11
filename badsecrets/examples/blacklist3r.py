@@ -8,16 +8,13 @@ import re
 import os
 import sys
 import argparse
-import requests
+import httpx
 import urllib.parse
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 ASPNET_Viewstate = modules_loaded["aspnet_viewstate"]
 
@@ -61,8 +58,8 @@ def main():
     viewstate = None
     generator = "0000"
 
-    generator_regex = re.compile(r'<input.+__VIEWSTATEGENERATOR"\svalue="(\w+)"')
-    viewstate_regex = re.compile(r'<input.+__VIEWSTATE"\svalue="(.+)"')
+    generator_regex = re.compile(r'<input.+__VIEWSTATEGENERATOR"\s*value="(\w+)"')
+    viewstate_regex = re.compile(r'<input.+__VIEWSTATE"\s*value="(.+)"')
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -73,13 +70,11 @@ def main():
     )
     parser.add_argument("-v", "--viewstate", type=validate_viewstate)
     parser.add_argument("-g", "--generator", type=validate_generator)
-
     parser.add_argument(
         "-p",
         "--proxy",
-        help="Optionally specificy an HTTP proxy",
+        help="Optionally specify an HTTP proxy",
     )
-
     parser.add_argument(
         "-a",
         "--user-agent",
@@ -96,9 +91,16 @@ def main():
         parser.error("--viewstate/--generator options and --url option are mutually exclusive")
         return
 
-    proxies = None
+    proxy = None
     if args.proxy:
-        proxies = {"http": args.proxy, "https": args.proxy}
+        if not args.proxy.startswith("http://") and not args.proxy.startswith("https://"):
+            proxy = "http://" + args.proxy
+        elif args.proxy.startswith("http:") and not args.proxy.startswith("http://"):
+            proxy = "http://" + args.proxy[5:]
+        elif args.proxy.startswith("https:") and not args.proxy.startswith("https://"):
+            proxy = "https://" + args.proxy[6:]
+        else:
+            proxy = args.proxy
 
     if args.url:
         headers = {}
@@ -106,10 +108,13 @@ def main():
             headers["User-agent"] = args.user_agent
 
         try:
-            res = requests.get(args.url, proxies=proxies, headers=headers, verify=False)
-        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
+            # Create a Client configured with the proxies, headers, and verify flag.
+            with httpx.Client(proxy=proxy, headers=headers, verify=False) as client:
+                res = client.get(args.url)
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
             print(f"Error connecting to URL: [{args.url}]")
             return
+
         resp_body = urllib.parse.unquote(res.text)
         generator_match = generator_regex.search(resp_body)
         viewstate_match = viewstate_regex.search(resp_body)
@@ -117,7 +122,7 @@ def main():
             viewstate = viewstate_match.group(1)
             generator = generator_match.group(1)
         else:
-            print(f"Did not find viewstate in repsonse from URL [{args.url}]")
+            print(f"Did not find viewstate in response from URL [{args.url}]")
             return
 
     elif args.viewstate:
@@ -133,7 +138,6 @@ def main():
     else:
         print("Matching MachineKeys NOT found")
 
-
 if __name__ == "__main__":
-    print("badsecrets - python 'blacklist3r' tool\n")
+    print("crapsecrets - python 'blacklist3r' tool\n")
     main()

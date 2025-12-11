@@ -2,10 +2,10 @@
 
 import re
 from flask_unsign import verify as flaskVerify
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 
 
-class Flask_SignedCookies(BadsecretsBase):
+class Flask_SignedCookies(CrapsecretsBase):
     identify_regex = re.compile(r"\.?e[Jy](?:[\w-]*\.)(?:[\w-]*\.)[\w-]*")
     description = {"product": "Flask Signed Cookie", "secret": "Flask Password", "severity": "HIGH"}
 

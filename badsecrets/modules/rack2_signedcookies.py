@@ -1,11 +1,11 @@
 import re
 import hmac
 import base64
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 from urllib.parse import unquote
 
 
-class Rack2_SignedCookies(BadsecretsBase):
+class Rack2_SignedCookies(CrapsecretsBase):
 
     identify_regex = re.compile(r"^BAh[\.a-zA-z-0-9\%=]{32,}--[\.a-zA-z-0-9%=]{16,}$")
     description = {

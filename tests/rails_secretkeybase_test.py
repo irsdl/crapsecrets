@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Rails_SecretKeyBase = modules_loaded["rails_secretkeybase"]
 

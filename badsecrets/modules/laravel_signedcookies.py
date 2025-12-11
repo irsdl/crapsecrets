@@ -7,11 +7,11 @@ import binascii
 import urllib.parse
 from Crypto.Cipher import AES
 from contextlib import suppress
-from badsecrets.helpers import unpad
-from badsecrets.base import BadsecretsBase
+from crapsecrets.helpers import unpad
+from crapsecrets.base import CrapsecretsBase
 
 
-class LaravelSignedCookies(BadsecretsBase):
+class LaravelSignedCookies(CrapsecretsBase):
     def laravelDecrypt(self, json_value, raw_secret):
         mac = json_value["mac"]
         value = bytes(json_value["value"], "utf-8")

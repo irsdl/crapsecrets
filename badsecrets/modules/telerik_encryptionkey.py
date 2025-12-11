@@ -7,15 +7,15 @@ from Crypto.Cipher import AES
 from Crypto.Protocol import KDF
 from contextlib import suppress
 from Crypto.Util.Padding import pad
-from badsecrets.helpers import unpad
-from badsecrets.base import BadsecretsBase
-from badsecrets.helpers import Csharp_pbkdf1
-from badsecrets.errors import Telerik_EncryptionKey_Exception
+from crapsecrets.helpers import unpad
+from crapsecrets.base import CrapsecretsBase
+from crapsecrets.helpers import Csharp_pbkdf1
+from crapsecrets.errors import Telerik_EncryptionKey_Exception
 
 telerik_hardcoded_salt = [58, 84, 91, 25, 10, 34, 29, 68, 60, 88, 44, 51, 1]
 
 
-class Telerik_EncryptionKey(BadsecretsBase):
+class Telerik_EncryptionKey(CrapsecretsBase):
     identify_regex = re.compile(r"^(?:[A-Za-z0-9+\/=%]{32,})$")
     description = {
         "product": "Telerik DialogParameters",
@@ -114,11 +114,11 @@ class Telerik_EncryptionKey(BadsecretsBase):
                     }
         return None
 
-    def encryptionkey_probe_generator(self, hash_key, key_derive_mode, include_machinekeys=False, custom_keys=None):
+    def encryptionkey_probe_generator(self, hash_key, key_derive_mode, include_machinekeys=False):
         test_string = b"AAAAAAAAAAAAAAAAAAAA"
         dp_enc = base64.b64encode(test_string).decode()
 
-        for ekey in custom_keys if custom_keys else self.prepare_keylist(include_machinekeys=include_machinekeys):
+        for ekey in self.prepare_keylist(include_machinekeys=include_machinekeys):
             derivedKey, derivedIV = self.telerik_derivekeys(ekey, key_derive_mode)
             ct = self.telerik_encrypt(derivedKey, derivedIV, dp_enc)
             h = hmac.new(hash_key.encode(), ct.encode(), self.hash_algs["SHA256"])

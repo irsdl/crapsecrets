@@ -1,12 +1,14 @@
 import os
 import sys
-import requests
-import requests_mock
-from mock import patch
+import httpx
+import respx
+from mock import patch  # or use unittest.mock.patch if available
+import pytest
 
+# Ensure the examples directory is in the path.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(f"{os.path.dirname(SCRIPT_DIR)}/examples")
-from badsecrets.examples import blacklist3r
+from crapsecrets.examples import blacklist3r
 
 base_viewstate_page = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -63,7 +65,7 @@ def test_examples_blacklist3r_manual(monkeypatch, capsys):
         "F5144F1A581A57BA3B60311AF7562A855998F7DD203CD8A71405599B980D8694B5C986C888BE4FC0E6571C2CE600D58CE82B8FA13106B17D77EA4CECDDBBEC1B"
         in captured.out
     )
-    assert "validationAlgo: SHA1" in captured.out
+    assert "ValidationAlgo: [SHA1]" in captured.out
 
     # Valid Viewstate Encrypted
     monkeypatch.setattr(
@@ -81,7 +83,7 @@ def test_examples_blacklist3r_manual(monkeypatch, capsys):
         "F5144F1A581A57BA3B60311AF7562A855998F7DD203CD8A71405599B980D8694B5C986C888BE4FC0E6571C2CE600D58CE82B8FA13106B17D77EA4CECDDBBEC1B"
         in captured.out
     )
-    assert "encryptionAlgo: DES" in captured.out
+    assert "EncryptionAlgo: [DES]" in captured.out
 
     # Invalid viewstate is Rejected
     monkeypatch.setattr(
@@ -133,6 +135,7 @@ def test_examples_blacklist3r_manual(monkeypatch, capsys):
 
 
 def test_examples_blacklist3r_offline(monkeypatch, capsys):
+    # Offline mode tests use URL mode.
     with patch("sys.exit") as exit_mock:
         # Invalid URL is rejected
         monkeypatch.setattr("sys.argv", ["python", "--url", "hxxp://notaurl"])
@@ -142,7 +145,7 @@ def test_examples_blacklist3r_offline(monkeypatch, capsys):
         assert "error: One of --url or --viewstate is required" in captured.err
 
     with patch("sys.exit") as exit_mock:
-        # Both URL and viewstate are supplied - rejected appropriately
+        # Both URL and viewstate supplied are mutually exclusive.
         monkeypatch.setattr(
             "sys.argv",
             [
@@ -158,47 +161,54 @@ def test_examples_blacklist3r_offline(monkeypatch, capsys):
         captured = capsys.readouterr()
         assert "error: --viewstate/--generator options and --url option are mutually exclusive" in captured.err
 
-    with requests_mock.Mocker() as m:
-        m.get(
-            f"http://example.com/vulnerableviewstate.aspx",
-            status_code=200,
-            text=base_viewstate_page.replace("###viewstate###", vulnerable_viewstate),
+    # Now use respx to simulate HTTP responses.
+    with respx.mock:
+        respx.get("http://example.com/vulnerableviewstate.aspx").mock(
+            return_value=httpx.Response(
+                200,
+                text=base_viewstate_page.replace("###viewstate###", vulnerable_viewstate),
+            )
         )
-        m.get(
-            f"http://example.com/nonvulnerableviewstate.aspx",
-            status_code=200,
-            text=base_viewstate_page.replace("###viewstate###", non_vulnerable_viewstate),
+        respx.get("http://example.com/nonvulnerableviewstate.aspx").mock(
+            return_value=httpx.Response(
+                200,
+                text=base_viewstate_page.replace("###viewstate###", non_vulnerable_viewstate),
+            )
         )
-        m.get(f"http://example.com/noviewstate.aspx", status_code=200, text=no_viewstate_page)
-        m.get(f"http://notreal.com/", exc=requests.exceptions.ConnectTimeout)
-        # URL Mode - Valid URL is visited, contains viewstate, viewstate is vulnerable
-
+        respx.get("http://example.com/noviewstate.aspx").mock(
+            return_value=httpx.Response(200, text=no_viewstate_page)
+        )
+        # Simulate a connection timeout for notreal.com.
+        respx.get("http://notreal.com/").mock(side_effect=httpx.ConnectTimeout("Timeout"))
+        
+        # URL Mode - Valid URL is visited, contains vulnerable viewstate
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/vulnerableviewstate.aspx"])
         blacklist3r.main()
-
-        # URL Mode - Valid URL is visited, contains viewstate, viewstate is vulnerable
         captured = capsys.readouterr()
         assert "Matching MachineKeys found!" in captured.out
         assert (
             "F4F0AC3A8889DFBB6FC9D24275A8F0E523C1FB1A2F3FA0C3F3B36320A80670E1D62D15A16A335F0CB14F8AECE7002A5BD8A980F677EA82666B49167947F0A669"
             in captured.out
         )
-        assert "encryptionAlgo: AES" in captured.out
+        assert "EncryptionAlgo: [AES]" in captured.out
 
-        # URL Mode - Valid URL is visited, contains viewstate, viewstate is NOT vulnerable
+        # URL Mode - Valid URL is visited, contains non-vulnerable viewstate
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/nonvulnerableviewstate.aspx"])
         blacklist3r.main()
         captured2 = capsys.readouterr()
         assert "Matching MachineKeys NOT found" in captured2.out
 
-        # URL Mode - Valid URL is visited, does not contain viewstate
+        # URL Mode - Valid URL is visited, but does not contain viewstate
         monkeypatch.setattr("sys.argv", ["python", "--url", "http://example.com/noviewstate.aspx"])
         blacklist3r.main()
         captured2 = capsys.readouterr()
-        assert "Did not find viewstate in repsonse from URL" in captured2.out
+        assert "Did not find viewstate in response from URL" in captured2.out
 
-        # URL Mode - Validly formatted URL is not responding
-        monkeypatch.setattr("sys.argv", ["python", "--url", "http://notreal.com"])
+        # URL Mode - Valid URL that is not responding (timeout)
+        monkeypatch.setattr("sys.argv", ["python", "--url", "http://notreal.com/"])
         blacklist3r.main()
         captured2 = capsys.readouterr()
         assert "Error connecting to URL" in captured2.out
+
+
+# To run these tests, use a test runner such as pytest.

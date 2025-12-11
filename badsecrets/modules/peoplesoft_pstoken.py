@@ -1,10 +1,10 @@
 import zlib
 import base64
 import hashlib
-from badsecrets.base import BadsecretsBase, generic_base64_regex
+from crapsecrets.base import CrapsecretsBase, generic_base64_regex
 
 
-class Peoplesoft_PSToken(BadsecretsBase):
+class Peoplesoft_PSToken(CrapsecretsBase):
     identify_regex = generic_base64_regex
     description = {"product": "Peoplesoft PS_TOKEN", "secret": "Peoplesoft Secret", "severity": "HIGH"}
 

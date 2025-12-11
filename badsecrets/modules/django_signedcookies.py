@@ -1,9 +1,9 @@
 import re
 from django.core.signing import loads as djangoLoads, BadSignature
-from badsecrets.base import BadsecretsBase
+from crapsecrets.base import CrapsecretsBase
 
 
-class DjangoSignedCookies(BadsecretsBase):
+class DjangoSignedCookies(CrapsecretsBase):
     identify_regex = re.compile(r"^[\.a-zA-z-0-9]+:[\.a-zA-z-0-9:]+$")
     description = {"product": "Djangno Signed Cookie", "secret": "Django secret_key", "severity": "HIGH"}
 

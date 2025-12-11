@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 DjangoSignedCookies = modules_loaded["django_signedcookies"]
 
