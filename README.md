@@ -51,7 +51,7 @@ python3 ./crapsecrets/examples/cli.py -mrd 5 -avsk -fvsp -mkf ./local/aspnet_mac
 - It is using a customised version of python viewstate library to support more objects when parsing viewstate
 - Added the `-evsd` or `--enable-viewstate-decryption` argument to check for the decryption key even when the validation key has not been found. This can be useful when the validation key is slightly different from the original one in the list.
 - Calculates the `__VIEWSTATEGENERATOR` by identifying its hash code. It also tries to find the actual path and app path early if `__VIEWSTATEGENERATOR` and URL have been provided. This can potentially increase performance, especially when an identifiable default ASPX page is missing from the URL.
-- Users can specify the number of threads to use with the `-nt` or `--num-threads` option (only applicable for the viewstate module). The default is 1 which is surprisingly fater than 10 in most cases!
+- Users can specify the number of threads to use with the `-nt` or `--num-threads` option (only applicable for the viewstate module). The default is 1 which is surprisingly faster than 10 in most cases!
 - It should support files with no extensions but we will need to fix errors as they are being reported.
 - It suppors IsolateApps (useful for .NET40 legacy). This is when we have ",IsolateApps" after the validation or decryption keys.
 - It reduces number of apppaths by actively testing for it based on https://soroush.me/blog/2019/07/iis-application-vs-folder-detection-during-blackbox-testing/. It can be disabled by `-dap` or `--disable-active-path-check`
@@ -61,7 +61,6 @@ python3 ./crapsecrets/examples/cli.py -mrd 5 -avsk -fvsp -mkf ./local/aspnet_mac
 - It uses the encrypted resource values from `/WebResource.axd?d=` or `/ScriptResource.axd?d=` under a new module called "aspnet_resource.py". It also supports IsolateApps feature there too. This is useful when __VIEWSTATE and __EVENTVALIDATION are missing.
 
 ## TODO:
-- add client IP addresses to the potential viewstate keys
 - add a dictionary for common pages and directories when calculating viewstate
 - Implement support for IsolateByAppId (probably impossible as it requires a secret from registry which we shouldn't have!)
 - Add support for retry when there is an error.
