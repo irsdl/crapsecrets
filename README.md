@@ -144,13 +144,13 @@ Under the hood, it's using the  `cli.py` example. The CLI can also be accessed m
 ```bash
 git clone https://github.com/blacklanternsecurity/badsecrets.git
 cd badsecrets
-python ./crapsecrets/examples/cli.py eyJhbGciOiJIUzI1NiJ9.eyJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkJhZFNlY3JldHMiLCJleHAiOjE1OTMxMzM0ODMsImlhdCI6MTQ2NjkwMzA4M30.ovqRikAo_0kKJ0GVrAwQlezymxrLGjcEiW_s3UJMMCo
+python ./badsecrets/examples/cli.py eyJhbGciOiJIUzI1NiJ9.eyJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkJhZFNlY3JldHMiLCJleHAiOjE1OTMxMzM0ODMsImlhdCI6MTQ2NjkwMzA4M30.ovqRikAo_0kKJ0GVrAwQlezymxrLGjcEiW_s3UJMMCo
 ```
 
 
 ## Examples
 
-To use the examples, after doing the pip install just `git clone` the repo and `cd` into the `crapsecrets` directory:
+To use the examples, after doing the pip install just `git clone` the repo and `cd` into the `badsecrets` directory:
 
 ```
 git clone https://github.com/blacklanternsecurity/badsecrets.git
@@ -164,7 +164,7 @@ If you are using the Badsecrets [BBOT](https://github.com/blacklanternsecurity/b
 
 ### cli.py
 
-Bad secrets includes an [example CLI](https://github.com/blacklanternsecurity/badsecrets/blob/dev/badsecrets/examples/cli.py) for convenience when manually checking secrets. As mentioned above, it is also accessible by just executing `crapsecrets`, after a successful pip install.
+Bad secrets includes an [example CLI](https://github.com/blacklanternsecurity/badsecrets/blob/dev/badsecrets/examples/cli.py) for convenience when manually checking secrets. As mentioned above, it is also accessible by just executing `badsecrets`, after a successful pip install.
 
 #### Usage
 
@@ -193,14 +193,14 @@ options:
 * Basic usage - checking a crytographic product for a known secret (against all modules):
 
 ```bash
-crapsecrets eyJhbGciOiJIUzI1NiJ9.eyJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkJhZFNlY3JldHMiLCJleHAiOjE1OTMxMzM0ODMsImlhdCI6MTQ2NjkwMzA4M30.ovqRikAo_0kKJ0GVrAwQlezymxrLGjcEiW_s3UJMMCo
+badsecrets eyJhbGciOiJIUzI1NiJ9.eyJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkJhZFNlY3JldHMiLCJleHAiOjE1OTMxMzM0ODMsImlhdCI6MTQ2NjkwMzA4M30.ovqRikAo_0kKJ0GVrAwQlezymxrLGjcEiW_s3UJMMCo
 ```
 It has a URL mode, which will connect to a target and attempt to carve for cryptographic products and check any it finds against all modules. 
 
 * URL Mode
 
 ```bash
-crapsecrets --url http://example.com/contains_bad_secret.html
+badsecrets --url http://example.com/contains_bad_secret.html
 ```
 
 You can also set a custom user-agent with `--user-agent "user-agent string"` or a proxy with `--proxy http://127.0.0.1` in this mode.
@@ -208,7 +208,7 @@ You can also set a custom user-agent with `--user-agent "user-agent string"` or 
 Example output:
 
 ```bash
-$ crapsecrets eyJhbGciOiJIUzI1NiJ9.eyJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkJhZFNlY3JldHMiLCJleHAiOjE1OTMxMzM0ODMsImlhdCI6MTQ2NjkwMzA4M30.ovqRikAo_0kKJ0GVrAwQlezymxrLGjcEiW_s3UJMMCo
+$ badsecrets eyJhbGciOiJIUzI1NiJ9.eyJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkJhZFNlY3JldHMiLCJleHAiOjE1OTMxMzM0ODMsImlhdCI6MTQ2NjkwMzA4M30.ovqRikAo_0kKJ0GVrAwQlezymxrLGjcEiW_s3UJMMCo
 
  __ )              |                                |         
  __ \    _` |   _` |   __|   _ \   __|   __|   _ \  __|   __| 
@@ -234,7 +234,7 @@ Details: {'Issuer': 'Issuer', 'Username': 'BadSecrets', 'exp': 1593133483, 'iat'
 By default, when a secret is NOT found, the provided product will be checked for potential hashcat matches. If there is a match, a nearly complete hashcat command will be produced (potentially) suitable for cracking the product via hashcat. This can let you get those keys that may not be known, but are weak and still crackable. Not all modules are capable of producing hashcat output. This behavior can be disabled with the `--no-hashcat` option.
 
 ```
-crapsecrets eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.qvkcSLMQPAQdEuRFv0h3aQIRpTfaI57GjXLOWI_6NaE
+badsecrets eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.qvkcSLMQPAQdEuRFv0h3aQIRpTfaI57GjXLOWI_6NaE
 ```
 
 Example output:
@@ -259,7 +259,7 @@ Module: [Generic_JWT] JSON Web Token (JWT) Algorithm: HS256 Command: [hashcat -m
 It is possible to specify a file containing additional secrets. These will be added to the default lists when the check is performed. This is accomplished with the `-c` / `--custom-secrets` flag. The provided value must be a valid file. There is a 100k size limit on the provided file.
 
 ```
-crapsecrets eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.vKxsE0u-TrpoMQ5zmBv1_I-NXSgouq6iZJWMHbHSmgY -c test.txt
+badsecrets eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.vKxsE0u-TrpoMQ5zmBv1_I-NXSgouq6iZJWMHbHSmgY -c test.txt
 ```
 
 Example output:
@@ -289,14 +289,14 @@ Details: {'sub': '1234567890', 'name': 'John Doe', 'iat': 1516239022, 'jwt_heade
 ### blacklist3r.py
 
 *Note: This is now obsolete, since `cli.py` is now capable of handling machinekeys/generator values. It will remain included for reference.*
-*Example: `crapsecrets KLox5XeGYfb7Lo8zFzr1YepUagXuixcxX55lpFht+rrW6VGheZi831vdusH6DCMfxIhsLG1EPU3OuPvqN2XBc/fj0ew15TQ1zBmmKWJVns4= AAAAAAAA`*
+*Example: `badsecrets KLox5XeGYfb7Lo8zFzr1YepUagXuixcxX55lpFht+rrW6VGheZi831vdusH6DCMfxIhsLG1EPU3OuPvqN2XBc/fj0ew15TQ1zBmmKWJVns4= AAAAAAAA`*
 
-Bad secrets includes a [fully functional CLI example](https://github.com/blacklanternsecurity/badsecrets/blob/dev/badsecrets/examples/blacklist3r.py) which replicates the functionality of [blacklist3r](https://github.com/NotSoSecure/Blacklist3r) in python crapsecrets/examples/blacklist3r. 
+Bad secrets includes a [fully functional CLI example](https://github.com/blacklanternsecurity/badsecrets/blob/dev/badsecrets/examples/blacklist3r.py) which replicates the functionality of [blacklist3r](https://github.com/NotSoSecure/Blacklist3r) in python badsecrets/examples/blacklist3r. 
 
 
 ```bash
-python ./crapsecrets/examples/blacklist3r.py --url http://vulnerablesite/vulnerablepage.aspx
-python ./crapsecrets/examples/blacklist3r.py --viewstate /wEPDwUJODExMDE5NzY5ZGQMKS6jehX5HkJgXxrPh09vumNTKQ== --generator EDD8C9AE
+python ./badsecrets/examples/blacklist3r.py --url http://vulnerablesite/vulnerablepage.aspx
+python ./badsecrets/examples/blacklist3r.py --viewstate /wEPDwUJODExMDE5NzY5ZGQMKS6jehX5HkJgXxrPh09vumNTKQ== --generator EDD8C9AE
 ```
 
 ### telerik_knownkey.py
@@ -306,14 +306,14 @@ Fully functional CLI example for identifying known Telerik Hash keys (`Telerik.U
 Currently, this appears to be the only tool capable of building a working exploit URL for "patched" versions of Telerik.
 
 ```bash
-python ./crapsecrets/examples/telerik_knownkey.py --url http://vulnerablesite/Telerik.Web.UI.DialogHandler.aspx
+python ./badsecrets/examples/telerik_knownkey.py --url http://vulnerablesite/Telerik.Web.UI.DialogHandler.aspx
 ```
 Optionally include ASP.NET MachineKeys with --machine-keys (Will SIGNIFICANTLY increase brute-forcing time)
 
 *Update: This utility will now, in addition to the `Telerik.Web.UI.DialogHandler.aspx` endpoint, also detect known `Telerik.AsyncUpload.ConfigurationEncryptionKey` keys in use via the `Telerik.Web.UI.WebResource.axd` endpoint.*
 
 ```bash
-python ./crapsecrets/examples/telerik_knownkey.py --url http://vulnerablesite/Telerik.Web.UI.WebResource.axd
+python ./badsecrets/examples/telerik_knownkey.py --url http://vulnerablesite/Telerik.Web.UI.WebResource.axd
 ```
 
 *With a pip install, can now be run directly via the `telerik-knownkey` command*
@@ -326,7 +326,7 @@ python telerik-knownkey --url http://vulnerablesite/Telerik.Web.UI.WebResource.a
 Brute-force detection of Symfony known secret key when "\_fragment" URLs are enabled, even when no example URL containing a hash can be located. [Relevent Blog Post](https://www.ambionics.io/blog/symfony-secret-fragment).
 
 ```bash
-python ./crapsecrets/examples/symfony_knownkey.py --url https://localhost/
+python ./badsecrets/examples/symfony_knownkey.py --url https://localhost/
 ```
 
 *With a pip install, can now be run directly via the `symfony-knownkey` command*
@@ -352,7 +352,7 @@ bbot -f subdomain-enum -m badsecrets -t evil.corp
 See if a token or other cryptographic product was produced with a known key
 
 ```python
-from crapsecrets import modules_loaded
+from badsecrets import modules_loaded
 
 Django_SignedCookies = modules_loaded["django_signedcookies"]
 ASPNET_Viewstate = modules_loaded["aspnet_viewstate"]
@@ -501,7 +501,7 @@ An additional layer of abstraction above check_secret, which accepts a python ht
 
 ```python
 import httpx
-from crapsecrets import modules_loaded
+from badsecrets import modules_loaded
 Telerik_HashKey = modules_loaded["telerik_hashkey"]
 
 x = Telerik_HashKey()
@@ -524,7 +524,7 @@ print(r_list)
 ### Check all modules at once
 
 ```python
-from crapsecrets.base import check_all_modules
+from badsecrets.base import check_all_modules
 
 tests = [
     "yJrdyJV6tkmHLII2uDq1Sl509UeDg9xGI4u3tb6dm9BQS4wD08KTkyXKST4PeQs00giqSA==",
@@ -550,7 +550,7 @@ for test in tests:
 ### Carve all modules at once
 ```python
 import httpx
-from crapsecrets.base import carve_all_modules
+from badsecrets.base import carve_all_modules
     
 ### using python httpx response object
 
