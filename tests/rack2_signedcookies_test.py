@@ -1,4 +1,4 @@
-from badsecrets import modules_loaded
+from crapsecrets import modules_loaded
 
 Rack2_SignedCookies = modules_loaded["rack2_signedcookies"]
 
